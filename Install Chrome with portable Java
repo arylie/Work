@@ -1,0 +1,29 @@
+#вариант для CMD
+
+ 
+ 
+#вариант для баша
+ 
+ 
+ @echo off
+    IF EXIST %systemdrive%\CMA\ GOTO CMAEXIST # НИХУЯ НЕ ДЕЛАТЬ ЕСЛИ ЕСТЬ ПАПКА БЛЯТЬ!
+    echo install Chrome
+    pushd "%~dp0"
+    msiexec.exe /i googlechromestandaloneenterprise.msi /qn /norestart
+    echo Set the parameter file
+# ЮЗАЮ ПЕРЕМЕННЫЕ БЛЯТЬ!
+    XCOPY master_preferences.txt "%systemdrive%\Program Files\Google\Chrome\Application\" /E /C /Q /R /Y
+    XCOPY master_preferences.txt "%systemdrive%\Program Files (x86)\Google\Chrome\Application\" /E /C /Q /R /Y
+    reg add HKLM\Software\Policies\Google\Update /f /v AutoUpdateCheckPeriodMinutes /d 0
+    sc stop gupdate
+    sc config gupdate start= disabled
+    echo disable autoupdate
+    REGEDIT /S chrome-manual-updates.reg /qn
+    echo Copying Java
+# ТУТ БЫЛИ КАКИЕ-ТО ДВОЙНЫЕ КОПИРОВАНИЯ ТУДА-СЮДА БЛЯТЬ!
+    xcopy /s /e /y CMA_PACK\CMA\CMA\jre %systemdrive%\CMA\jre\
+    regedit /s CMA_PACK\CMA\CMA\jws.reg # ХУЯК И ВСЕ СДЕЛАЛИ ЭТИМ СКРИПТОМ И НЕХУЙ ЗАПУСКАТЬ ДЕФОЛТНЫЙ БЛЯТЬ!
+    popd
+    exit 0
+    :CMAEXIST # ДА GOTO ЗАШКВАР, А CMD НЕ ЗАШКВАР БЛЯТЬ?!
+    exit 0
