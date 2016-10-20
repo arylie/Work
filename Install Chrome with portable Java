@@ -1,5 +1,25 @@
 #вариант для CMD
-
+ @echo off
+ echo install Chrome
+ pushd "%~dp0"
+ msiexec.exe /i googlechromestandaloneenterprise.msi /qn /norestart
+ echo Set the parameter file
+ XCOPY master_preferences.txt "C:\Program Files\Google\Chrome\Application\" /E /C /Q /R /Y
+ XCOPY master_preferences.txt "C:\Program Files (x86)\Google\Chrome\Application\" /E /C /Q /R /Y
+ reg add HKLM\Software\Policies\Google\Update /f /v AutoUpdateCheckPeriodMinutes /d 0
+ sc stop gupdate
+ sc config gupdate start= disabled
+ echo disable autoupdate
+ REGEDIT /S chrome-manual-updates.reg /qn
+ echo Copying Java
+ mkdir %systemdrive%\CMA_PACK\CMA\
+ xcopy /s /e /y "%~dp0CMA_PACK\CMA\CMA" "%systemdrive%\CMA_PACK\CMA"
+ %systemdrive%\CMA_PACK\CMA\Install_JWS.bat
+ regedit /s %systemdrive%\CMA_PACK\CMA\jws.reg"
+ popd
+ pause
+ rmdir %systemdrive%\CMA_PACK /q /s
+ exit
  
  
 #вариант для баша
