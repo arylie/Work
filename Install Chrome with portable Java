@@ -47,3 +47,97 @@
     exit 0
     :CMAEXIST # ДА GOTO ЗАШКВАР, А CMD НЕ ЗАШКВАР БЛЯТЬ?!
     exit 0
+
+#варик 3
+
+@echo off
+@rem DESCRIPTION: Google Chrome Deployment 51.0.2704.63
+@echo off
+
+@Rem === Variables_declaration-START ===============================
+Set AppliName=Google_Chrome_51.0.2704.63
+Set PackageName=Google_Chrome_51.0.2704.63
+Set PackageNameScript=Google_Chrome_51.0.2704.63
+Set Version=51.0.2704.63
+Set LogfilepathCmd=%Windir%\Log_Chrome\%PackageName%_cmdLog.txt
+Set MSIFile=googlechromestandaloneenterprise64.msi
+Set master=master_preferences
+@Rem === Variables_declaration-END =================================
+
+rem cls
+if not exist "%Windir%\Log_Chrome\" md "%Windir%\Log_Chrome\"
+@echo --------------------------------------------------------------------- >>%LogfilepathCmd%
+@echo %AppliName% install script >>%LogfilepathCmd%
+@echo This logs doesn't include the %AppliName% install logs. >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+FOR /F  %%I IN ('DATE /T') DO FOR /F  %%J IN ('Time /T') DO echo %%I %%J       >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+
+Rem ================================
+Rem ========= Installation       ===========
+Rem ================================
+Rem Installation
+@echo Installation  of %AppliName% >>%LogfilepathCmd%
+start /wait msiexec /i "%~dp0%MSIFile%" /qn /l* "%Windir%\Log_Chrome\%PackageName%_msiLog.txt"
+set errorcode=%errorlevel%
+If "%errorCode%"=="3010" (Set errorcode=0
+@echo errorCode=3010, A restart is required to complet the install >>%LogfilepathCmd%
+)
+If "%errorCode%"=="1641" (Set errorcode=0
+@echo errorCode=1641, The installer has initiated a restart >>%LogfilepathCmd%
+)
+ 
+@echo Return Code of %AppliName% installation = %errorcode% >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+
+Rem ===============================================
+Rem ========= 		Setting          ===========
+Rem ================================================
+@echo Set the parameter file >>%LogfilepathCmd%
+if exist "c:\Program Files\Google\Chrome\Application\master_preferences" copy /Y "%~dp0master_preferences" "c:\Program Files\Google\Chrome\Application\master_preferences" >>%LogfilepathCmd%
+if exist "c:\Program Files (x86)\Google\Chrome\Application\master_preferences" copy /Y "%~dp0master_preferences" "c:\Program Files (x86)\Google\Chrome\Application\master_preferences" >>%LogfilepathCmd%
+rem @XCOPY "master_preferences" "C:\Program Files\Google\Chrome\Application\master_preferences" /E /C /Q /R /Y >>%LogfilepathCmd%
+
+rem @XCOPY "master_preferences" "C:\Program Files (x86)\Google\Chrome\Application\" /E /C /Q /R /Y >>%LogfilepathCmd%
+
+@echo disable auto update >>%LogfilepathCmd%
+reg add HKLM\Software\Policies\Google\Update /f /v AutoUpdateCheckPeriodMinutes /d 0 >>%LogfilepathCmd%
+reg add HKLM\Software\Wow6432Node\Google\Update /f /v AutoUpdateCheckPeriodMinutes /d 0 >>%LogfilepathCmd%
+reg add HKLM\Software\Policies\Google\Update /f /v UpdateDefault /d 0 >>%LogfilepathCmd%
+reg add HKLM\Software\Wow6432Node\Google\Update /f /v UpdateDefault /d 0 >>%LogfilepathCmd%
+reg add HKLM\Software\Policies\Google\Update /f /v DisableAutoUpdateChecksCheckboxValue /d 1 >>%LogfilepathCmd%
+reg add HKLM\Software\Wow6432Node\Google\Update /f /v DisableAutoUpdateChecksCheckboxValue /d 1 >>%LogfilepathCmd%
+rem REGEDIT /S "%~dp0%chrome-manual-updates.reg%" /qn >>%LogfilepathCmd%
+
+taskkill /T /F /FI "imagename eq GoogleUpdate*" >>%LogfilepathCmd%
+
+sc stop gupdate >>%LogfilepathCmd%
+sc config gupdate start= disabled >>%LogfilepathCmd%
+sc delete gupdate >>%LogfilepathCmd%
+
+sc stop gupdatem >>%LogfilepathCmd%
+sc config gupdatem start= disabled >>%LogfilepathCmd%
+sc delete gupdatem >>%LogfilepathCmd%
+
+for /f %%x in ('schtasks /query ^| findstr GoogleUpdate') do schtasks /Delete /TN %%x /F >>%LogfilepathCmd%
+
+REG DELETE HKLM\SOFTWARE\Wow6432Node\Google\Update /f >>%LogfilepathCmd%
+REG DELETE HKLM\SOFTWARE\Policies\Google\Update /f >>%LogfilepathCmd%
+
+if exist "c:\Program Files (x86)\Google\Update" RD /S /Q "C:\Program Files (x86)\Google\Update" >>%LogfilepathCmd%
+if exist "c:\Program Files\Google\Update" RD /S /Q "C:\Program Files\Google\Update" >>%LogfilepathCmd%
+
+REG ADD HKLM\Software\Policies\Google\Chrome /f /v AuthServerWhitelist /t REG_SZ /d "*" >>%LogfilepathCmd%
+
+Rem ================================================
+Rem ========= End of Script       ===========
+Rem ================================================
+:END
+FOR /F  %%I IN ('DATE /T') DO FOR /F  %%J IN ('Time /T') DO echo %%I %%J       >>%LogfilepathCmd%
+@echo end of script >>%LogfilepathCmd%
+@echo Error code script = %errorcode% >>%LogfilepathCmd%
+@echo --------------------------------------------------------------------- >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+@echo. >>%LogfilepathCmd%
+rem @echo. %errorcode%
